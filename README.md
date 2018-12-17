@@ -1,4 +1,4 @@
-#Engima, Rock, Paper, Scissors
+# Engima, Rock, Paper, Scissors
 
 ## Install
 ### Download and deploy enigma-docker-network
