@@ -31,14 +31,13 @@ class OpenGamesWrapper extends Component {
   }
 
   componentDidMount = async () => {
-    console.log('Open Games: ', this.state.numOpenGames);
-    if (this.state.numOpenGames != 0) {
+    if (this.state.numOpenGames !== 0) {
       let openGamesDiv = [];
-      for(var i=0; i<this.state.numOpenGames; i++){
+      for(let i=0; i<this.state.numOpenGames; i++){
         openGamesDiv.push(<JoinGameWrapper
-                            key={this.state.openGames[i].gameID}
-                            gameID={this.state.openGames[i].gameID}
-                            bet={this.state.openGames[i].bet.toNumber()}
+                            key={i}
+                            gameID={this.state.openGames[i][6].toNumber()}
+                            bet={this.state.openGames[i][5].toNumber()}
                             playerAddress={this.props.playerAddress}
                             rps={this.props.rps}
                             enigmaSetup={this.props.enigmaSetup}

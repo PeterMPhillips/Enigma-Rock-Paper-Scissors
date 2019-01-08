@@ -17,8 +17,8 @@ const Promisify = (inner) =>
     );
 
 // Specify the signature for the callable and callback functions, make sure there are NO spaces
-const CALLABLE = "calculateWinner(bytes32,address[],string,string)";
-const CALLBACK = "setWinner(bytes32,address)";
+const CALLABLE = "calculateWinner(uint,address[],string,string)";
+const CALLBACK = "setWinner(uint,address)";
 const ENG_FEE = 1;
 const GAS = "1000000";
 

@@ -51,19 +51,20 @@ class RockPaperScissorsWrapper extends Component {
 
   async getOpenGames() {
     let openGames = [];
-    let e = await this.props.rps.NewGame({}, {fromBlock: 0, toBlock: 'latest'});
-    let logs = await Promisify(callback => e.get(callback));
-    for(var i=0; i<logs.length; i++){
-      let [ status, player1 ] = await this.props.rps.getGame(logs[i].args.gameID);
+    let numOpenGames = (await this.props.rps.gamesCount()).toNumber();
+    for(var i=0; i<numOpenGames; i++){
+      let openGame = await this.props.rps.getGame(i);
+      let [ status, player1 ] = openGame;
       if(status.toNumber() == 0 && player1.toLowerCase() != this.state.playerAddress.toLowerCase()){
-        openGames.push(logs[i].args);
+        openGames.push(openGame);
       }
     }
+    console.log('open games', openGames);
     this.setState({
       openGames: openGames,
       numOpenGames: openGames.length
     });
-    this.render();
+    // this.render();
   }
 
   /*

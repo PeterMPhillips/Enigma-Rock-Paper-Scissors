@@ -5,6 +5,7 @@ contract RockPaperScissors {
   address public enigma;
 
   struct Game {
+    uint gameId;
     uint8 status;
     address winner;
     address player1;
@@ -15,7 +16,8 @@ contract RockPaperScissors {
   }
 
   //mapping(bytes32 => uint8) public results;
-  mapping(bytes32 => Game) public games;
+  Game[] public games;
+  uint public gamesCount;
   mapping(address => int256) public earnings;
   bytes32[] public openGames;
 
@@ -29,16 +31,19 @@ contract RockPaperScissors {
   function newGame(bytes _move)
   payable
   external {
-    bytes32 gameID = keccak256(abi.encodePacked(msg.sender, msg.value, now));
-    games[gameID].player1 = msg.sender;
-    games[gameID].player1Move = _move;
-    games[gameID].bet = msg.value;
+    Game memory game;
+    game.gameId = gamesCount;
+    game.player1 = msg.sender;
+    game.player1Move = _move;
+    game.bet = msg.value;
     earnings[msg.sender] -= int256(msg.value);
-    emit NewGame(gameID, msg.sender, msg.value);
+    games.push(game);
+    gamesCount++;
+    emit NewGame(gamesCount, msg.sender, msg.value);
   }
 
   //Join an open game
-  function joinGame(bytes32 _gameID, bytes _move)
+  function joinGame(uint _gameID, bytes _move)
   payable
   external {
     require(games[_gameID].player2 == address(0));
@@ -51,7 +56,7 @@ contract RockPaperScissors {
   }
 
   //Withdraw winnings
-  function withdraw(bytes32 _gameID)
+  function withdraw(uint _gameID)
   external{
     require(games[_gameID].status == 2);
     games[_gameID].status = 3;
@@ -71,10 +76,10 @@ contract RockPaperScissors {
   }
 
   //Callable  function
-  function calculateWinner(bytes32 _gameID, address[] _players, string _move1, string _move2)
+  function calculateWinner(uint _gameID, address[] _players, string _move1, string _move2)
   public
   pure
-  returns(bytes32, address){
+  returns(uint, address){
     require(_players.length == 2);
     address winner;
     bytes32 move1 = keccak256(abi.encode(_move1));
@@ -102,32 +107,34 @@ contract RockPaperScissors {
   }
 
   //Callback function
-  function setWinner(bytes32 _gameID, address _address) public onlyEnigma() {
+  function setWinner(uint _gameID, address _address) public onlyEnigma() {
     games[_gameID].status = 2;
     games[_gameID].winner = _address;
     emit Winner(_gameID, _address);
   }
 
-  function getGame(bytes32 _gameID)
+  function getGame(uint _gameID)
   external
   view
-  returns(uint8, address, address, bytes, bytes, uint256){
+  returns(uint8, address, address, bytes, bytes, uint256, uint){
     return (games[_gameID].status,
             games[_gameID].player1,
             games[_gameID].player2,
             games[_gameID].player1Move,
             games[_gameID].player2Move,
-            games[_gameID].bet);
+            games[_gameID].bet,
+            games[_gameID].gameId
+    );
   }
 
-  function getWinner(bytes32 _gameID)
+  function getWinner(uint _gameID)
   external
   view
   returns(address){
     return games[_gameID].winner;
   }
 
-  function getStatus(bytes32 _gameID)
+  function getStatus(uint _gameID)
   external
   view
   returns(uint8){
@@ -148,7 +155,7 @@ contract RockPaperScissors {
   }
 
   // Event emitted upon callback completion; watched from front end
-  event Winner(bytes32 indexed gameID, address indexed winner);
-  event NewGame(bytes32 indexed gameID, address indexed player1, uint256 indexed bet);
-  event JoinGame(bytes32 indexed gameID, address indexed player2);
+  event Winner(uint indexed gameID, address indexed winner);
+  event NewGame(uint indexed gameID, address indexed player1, uint256 indexed bet);
+  event JoinGame(uint indexed gameID, address indexed player2);
 }
