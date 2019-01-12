@@ -11,6 +11,7 @@ import InputLabel from "@material-ui/core/InputLabel";
 import FormControl from "@material-ui/core/FormControl";
 import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
+import Blockies from "react-blockies";
 
 const styles = theme => ({
  button: {
@@ -28,10 +29,20 @@ class ChangeAddressDialog extends Component {
    super(props);
    this.state = {
      open: false,
-     playerAddress: "None",
+     playerAddress: this.props.playerAddress,
+     button: <Button onClick={this.handleClickOpen} variant="outlined" color="secondary">Select Address</Button>
    };
    this.handleChangeAddress = this.handleChangeAddress.bind(this);
    this.handleSetAddress = this.handleSetAddress.bind(this);
+ }
+
+ componentDidMount() {
+   if(this.state.playerAddress != '' && this.state.playerAddress !== undefined){
+     console.log('componentDidMount: ', this.state.playerAddress);
+     this.setState({
+       button: <Button onClick={this.handleClickOpen}><Blockies seed={this.state.playerAddress.toLowerCase()} scale={5} className="identicon"/></Button>
+     });
+   }
  }
 
  handleClickOpen = () => {
@@ -44,14 +55,17 @@ class ChangeAddressDialog extends Component {
 
  // onChange listener to update state with user-input address
  handleChangeAddress(event) {
-   this.setState({ playerAddress: event.target.value });
+   this.setState({
+     playerAddress: event.target.value,
+     button: <Button onClick={this.handleClickOpen}><Blockies seed={event.target.value.toLowerCase()} scale={5} className="identicon"/></Button>
+   });
  }
 
 
- // onClick listener to update to trigger joinGame callback from parent component
+ // onClick listener to update to trigger changeAddress callback from parent component
  async handleSetAddress(event) {
    event.preventDefault();
-   // Trigger JoinGameWrapper joinGame callback
+   // Trigger RockPaperScissors changeAddress callback
    this.props.onChangeAddress(
      this.state.playerAddress
    );
@@ -64,13 +78,9 @@ class ChangeAddressDialog extends Component {
    const { classes } = this.props;
    return (
      <div>
-       <Button
-         onClick={this.handleClickOpen}
-         variant="contained"
-         color="secondary"
-       >
-         Choose Address
-       </Button>
+
+         {this.state.button}
+
        <Dialog
          open={this.state.open}
          onClose={this.handleClose}
@@ -94,12 +104,9 @@ class ChangeAddressDialog extends Component {
                    id: "playerAddress"
                  }}
                >
-                 <MenuItem value="">
-                   <em>None</em>
-                 </MenuItem>
                  {this.props.accounts.map((account, i) => {
                    return (
-                     <MenuItem key={i} value={account}>
+                     <MenuItem key={i} value={account.toLowerCase()}>
                        {account}
                      </MenuItem>
                    );

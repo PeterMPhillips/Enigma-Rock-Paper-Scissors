@@ -28,7 +28,7 @@ class JoinGameDialog extends Component {
    super(props);
    this.state = {
      open: false,
-     playerMove: "None"
+     playerMove: ''
    };
    this.handleChangeMove = this.handleChangeMove.bind(this);
    this.handleSetMove = this.handleSetMove.bind(this);
@@ -62,11 +62,11 @@ class JoinGameDialog extends Component {
  render() {
    const { classes } = this.props;
    return (
-     <div>
+     <div className="gameAction">
        <Button
          onClick={this.handleClickOpen}
-         variant="contained"
-         color="secondary"
+         variant="outlined"
+         color="primary"
        >
          Play Game
        </Button>
@@ -93,16 +93,13 @@ class JoinGameDialog extends Component {
                    id: "playerMove"
                  }}
                >
-                 <MenuItem value="">
-                   <em>None</em>
-                 </MenuItem>
                  <MenuItem value='rock'>
                    Rock
                  </MenuItem>
                  <MenuItem value='paper'>
                    Paper
                  </MenuItem>
-                 <MenuItem value='Scissors'>
+                 <MenuItem value='scissors'>
                    Scissors
                  </MenuItem>
                </Select>

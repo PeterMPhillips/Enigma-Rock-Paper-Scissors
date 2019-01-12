@@ -1,69 +1,45 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { withStyles } from "@material-ui/core/styles";
-import Paper from "@material-ui/core/Paper";
+import Header from "./Header";
+import Splash from "./Splash";
 import ChangeAddressDialog from "./ChangeAddressDialog";
 import NewGameDialog from "./NewGameDialog";
-import OpenGamesWrapper from "./OpenGamesWrapper";
-const engUtils = require("./lib/enigma-utils");
-const GAS = "1000000";
-const Promisify = (inner) =>
-    new Promise((resolve, reject) =>
-        inner((err, res) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(res);
-            }
-        })
-    );
+import InfoWrapper from "./InfoWrapper";
+import Button from '@material-ui/core/Button';
+import Snackbar from '@material-ui/core/Snackbar';
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import blueGrey from '@material-ui/core/colors/blueGrey';
+
 
 const styles = theme => ({
-  button: {
-    display: "block",
-    marginTop: theme.spacing.unit * 2
+  root: {
+    backgroundColor: '#ffffff'
+  },
+  close: {
+    padding: theme.spacing.unit / 2,
+  },
+  snackbar: {
+    color: theme.palette.secondary.contrastText,
+    backgroundColor: theme.palette.secondary.main,
+    borderRadius: 5
   }
 });
+const engUtils = require("./lib/enigma-utils");
+const GAS = "1000000";
 
 class RockPaperScissorsWrapper extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      playerAddress: "Select Address...",
+      playerAddress: '',
       totalEarnings: 0,
-      numOpenGames: 0,
-      openGames: null
+      open: false
     };
     this.changeAddress = this.changeAddress.bind(this);
     this.newGame = this.newGame.bind(this);
-    this.getOpenGames = this.getOpenGames.bind(this);
-  }
-
-  componentDidMount = async () => {
-    /*
-    Check if we have an instance of the RockPaperScissors deployed or not before
-    we call any functions on it
-    */
-    if (this.props.rps != null) {
-      await this.getOpenGames();
-    }
-  };
-
-  async getOpenGames() {
-    let openGames = [];
-    let e = await this.props.rps.NewGame({}, {fromBlock: 0, toBlock: 'latest'});
-    let logs = await Promisify(callback => e.get(callback));
-    for(var i=0; i<logs.length; i++){
-      let [ status, player1 ] = await this.props.rps.getGame(logs[i].args.gameID);
-      if(status.toNumber() == 0 && player1.toLowerCase() != this.state.playerAddress.toLowerCase()){
-        openGames.push(logs[i].args);
-      }
-    }
-    this.setState({
-      openGames: openGames,
-      numOpenGames: openGames.length
-    });
-    this.render();
   }
 
   /*
@@ -71,10 +47,12 @@ class RockPaperScissorsWrapper extends Component {
   in this function and pass in those values to the contract
   */
   async changeAddress(address) {
-    this.setState({ playerAddress: address });
     let earnings = await this.props.rps.getEarnings(address);
-    this.setState({ totalEarnings: earnings.toNumber() });
-    await this.getOpenGames();
+    this.setState({
+      playerAddress: address,
+      totalEarnings: earnings.toNumber(),
+    });
+    this.render();
   }
 
   /*
@@ -87,65 +65,72 @@ class RockPaperScissorsWrapper extends Component {
       encryptedMove,
       { from: this.state.playerAddress, value: bet, gas: GAS }
     );
-    /*
-    let numMillionaires = await this.props.millionairesProblem.numMillionaires.call();
-    numMillionaires = numMillionaires.toNumber();
-    this.setState({ numMillionaires });
-    */
+    this.setState({ open: true });
   }
 
+  handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    this.setState({ open: false });
+  };
+
   render() {
-    if(this.state.numOpenGames == 0 || this.state.playerAddress == "Select Address..."){
+    const { classes } = this.props;
       return (
         <div>
-          <Paper>
-            <br />
-            <h2>{this.state.playerAddress}</h2>
-            <ChangeAddressDialog
-              accounts={this.props.enigmaSetup.accounts}
-              onChangeAddress={this.changeAddress}
-            />
-            <h3>Total Earnings = {this.state.totalEarnings}</h3>
-            <h3>Open Games = {this.state.numOpenGames}</h3>
-            <br />
-            <NewGameDialog
-              playerAddress={this.state.playerAddress}
-              onNewGame={this.newGame}
-            />
-            <br />
-          </Paper>
-        </div>
-      );
-    } else {
-      return (
-        <div>
-          <Paper>
-            <br />
-            <h2>{this.state.playerAddress}</h2>
-            <ChangeAddressDialog
-              accounts={this.props.enigmaSetup.accounts}
-              onChangeAddress={this.changeAddress}
-            />
-            <h3>Total Earnings = {this.state.totalEarnings}</h3>
-            <h3>Open Games = {this.state.numOpenGames}</h3>
-            <br />
-            <NewGameDialog
-              playerAddress={this.state.playerAddress}
-              onNewGame={this.newGame}
-            />
-            <br />
-          </Paper>
+          <Header
+            enigmaSetup={this.props.enigmaSetup}
+            onChangeAddress={this.changeAddress}
+          />
+          <Splash />
+          <NewGameDialog
+            playerAddress={this.state.playerAddress}
+            onNewGame={this.newGame}
+          />
           <br />
-          <OpenGamesWrapper
+          <br />
+          <InfoWrapper
             rps={this.props.rps}
             enigmaSetup={this.props.enigmaSetup}
             playerAddress={this.state.playerAddress}
-            numOpenGames={this.state.numOpenGames}
-            openGames={this.state.openGames}
+            newGame={this.state.newGame}
           />
-        </div>
-      );
-    }
+          <Snackbar
+            className={classes.snackbar}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            open={this.state.open}
+            autoHideDuration={6000}
+            onClose={this.handleClose}
+            ContentProps={{
+              'aria-describedby': 'message-id',
+              classes: {
+                root: classes.snackbar
+              }
+            }}
+            message={
+              <span id="message-id">
+                <CheckCircleIcon />
+                <span>New Game Started!</span>
+              </span>}
+            action={[
+              <IconButton
+                key="close"
+                aria-label="Close"
+                color="inherit"
+                className={classes.close}
+                onClick={this.handleClose}
+              >
+                <CloseIcon />
+              </IconButton>,
+            ]}
+          />
+      </div>
+    );
   }
 }
 

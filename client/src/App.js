@@ -1,11 +1,28 @@
 import React, { Component } from "react";
+import {Helmet} from 'react-helmet';
 import getContractInstance from "./utils/getContractInstance";
 import EnigmaSetup from "./utils/getEnigmaSetup";
-import RockPaperScissorsContractDefinition from "./contracts/RockPaperScissors.json";
-import { Container, Message } from "semantic-ui-react";
 import Header from "./Header";
+import Splash from "./Splash";
+import RockPaperScissorsContractDefinition from "./contracts/RockPaperScissors.json";
 import RockPaperScissorsWrapper from "./RockPaperScissorsWrapper";
+import CircularProgress from '@material-ui/core/CircularProgress';
+import { MuiThemeProvider, createMuiTheme, withTheme} from '@material-ui/core/styles';
+import blueGrey from '@material-ui/core/colors/blueGrey';
+import lightBlue from '@material-ui/core/colors/lightBlue';
 import "./App.css";
+
+const theme = createMuiTheme({
+  palette: {
+    primary: {
+      main: blueGrey[900],
+    },
+    secondary: {
+      main: lightBlue[300],
+    },
+  },
+  appBackground: blueGrey[50],
+});
 
 class App extends Component {
   constructor(props) {
@@ -35,26 +52,34 @@ class App extends Component {
   render() {
     if (!this.state.enigmaSetup) {
       return (
-        <div className="App">
-          <Header />
-          <Message color="red">Enigma setup still loading...</Message>
-        </div>
+        <MuiThemeProvider theme={theme}>
+          <div className="App">
+            <Helmet>
+                <style>{`body { background-color: ${theme.appBackground} !important}`}</style>
+            </Helmet>
+            <Header/>
+            <Splash />
+            <br />
+            <CircularProgress color="secondary"/>
+          </div>
+        </MuiThemeProvider>
       );
     } else {
       return (
-        <div className="App">
-          <Header />
-          <br />
-          <Container>
+        <MuiThemeProvider theme={theme}>
+          <div className="App">
+            <Helmet>
+                <style>{`body { background-color: ${theme.appBackground} !important}`}</style>
+            </Helmet>
             <RockPaperScissorsWrapper
               enigmaSetup={this.state.enigmaSetup}
               rps={this.state.rps}
             />
-          </Container>
-        </div>
+          </div>
+        </MuiThemeProvider>
       );
     }
   }
 }
 
-export default App;
+export default withTheme()(App);

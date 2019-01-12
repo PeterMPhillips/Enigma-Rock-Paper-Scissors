@@ -1,3 +1,76 @@
 .App {
   text-align: center;
 }
+
+.game {
+  position: relative;
+  height: 60px;
+  border-top: 1px solid #ccc;
+  padding: 0 10px;
+}
+
+.game:first-of-type {
+  border-top:0;
+  text-align: left;
+}
+
+.gameAction, .gameInfo {
+  position: absolute;
+}
+
+.gameInfo{
+  left:10px;
+}
+
+.gameAction {
+  right: 10px;
+  margin:0;
+  line-height: 60px;
+  vertical-align: middle;
+}
+
+.gameInfo h3, .gameInfo span, .gameInfo .identicon{
+  position: relative;
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.gameInfo h3, .gameInfo span{
+  top:-6px;
+}
+
+
+.gameAction .status{
+  margin-right: 10px;
+  opacity: 0.7;
+}
+
+.identicon {
+  border:1px solid #ccc;
+  border-radius:50%;
+}
+
+.gameInfo .identicon {
+  top:7px;
+  border:1px solid #666;
+}
+
+.splash {
+  box-shadow: 0px 1px 5px 0px rgba(0, 0, 0, 0.2),
+              0px 2px 2px 0px rgba(0, 0, 0, 0.14),
+              0px 3px 1px -2px rgba(0, 0, 0, 0.12);
+}
+
+#message-id svg{
+  margin-right:10px;
+}
+
+#message-id span {
+  top: 2px;
+  position:relative;
+}
+
+#message-id svg, #message-id span {
+  line-height: 20px;
+  vertical-align: middle;
+}

@@ -4,21 +4,12 @@ import { withStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Paper from "@material-ui/core/Paper";
 import JoinGameDialog from "./JoinGameDialog";
+import Blockies from "react-blockies";
 const engUtils = require("./lib/enigma-utils");
-const Promisify = (inner) =>
-    new Promise((resolve, reject) =>
-        inner((err, res) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(res);
-            }
-        })
-    );
 
 // Specify the signature for the callable and callback functions, make sure there are NO spaces
-const CALLABLE = "calculateWinner(bytes32,address[],string,string)";
-const CALLBACK = "setWinner(bytes32,address)";
+const CALLABLE = "calculateWinner(uint256,address[],string,string)";
+const CALLBACK = "setWinner(uint256,address)";
 const ENG_FEE = 1;
 const GAS = "1000000";
 
@@ -71,9 +62,10 @@ class JoinGameWrapper extends Component {
     // Run the enigma task secure computation above
     await this.enigmaTask(this.props.gameID);
     // Watch for event and update state once callback is completed/event emitted
-    const callbackFinishedEvent = this.props.rps.Winner();
+    const callbackFinishedEvent = this.props.rps.Winner({gameID: this.props.gameID});
     callbackFinishedEvent.watch(async (error, result) => {
       console.log(result);
+
       let winner = result.args.winner.toLowerCase();
       //let winner = await this.props.rps.getWinner.call(this.props.gameID);
 
@@ -94,12 +86,6 @@ class JoinGameWrapper extends Component {
   */
   async enigmaTask() {
     let [ status, player1, player2, player1Move, player2Move, bet ] = await this.props.rps.getGame.call(this.props.gameID);
-    console.log(this.props.gameID);
-    console.log(status);
-    console.log(player1);
-    console.log(player2);
-    console.log(player1Move);
-    console.log(player2Move);
     if(status.toNumber() == 1){
       let gameID = this.props.gameID;
       let addresses = [player1, player2];
@@ -130,57 +116,37 @@ class JoinGameWrapper extends Component {
       console.log("mined on block:", result.receipt.blockNumber);
     }
   }
-/*
-  async handleSubmit(event) {
-    event.preventDefault();
-    let status = "Calculating winner...";
-    this.setState({ result: status });
-    // Run the enigma task secure computation above
-    await this.enigmaTask(this.props.gameID);
-    // Watch for event and update state once callback is completed/event emitted
-    const callbackFinishedEvent = this.props.rps.Winner();
-    callbackFinishedEvent.watch(async (error, result) => {
-      let game = await this.props.rps.getGame.call(this.props.gameID);
-      if(game.winner == this.state.playerAddress){
-        status = "WON";
-      } else if(game.winner == '0x0000000000000000000000000000000000000000'){
-        status = "DRAW";
-      } else{
-        status = "LOST";
-      }
-      this.setState({ result: status });
-      this.render();
-    });
-  }
-*/
+  
   render() {
     if(this.state.result == null){
       return (
-        <div>
-          <Paper>
-            <br />
-            <h3>Bet: {this.props.bet}</h3>
-            <JoinGameDialog
-              onJoinGame={this.joinGame}
+        <div className="game openGame">
+          <span className="gameInfo">
+            <Blockies
+               seed={this.props.opponentAddress}
+               scale={5}
+               className="identicon"
             />
-            <br />
-            <br />
-            <p>Game ID: {this.props.gameID}</p>
-            <br />
-          </Paper>
+            <h3>#{this.props.gameID}</h3><span>Bet: {this.props.bet} WEI</span>
+          </span>
+          <JoinGameDialog
+            onJoinGame={this.joinGame}
+          />
+
         </div>
       );
     } else {
       return (
-        <div>
-          <Paper>
-            <br />
-            <h3>Bet: {this.props.bet}</h3>
-            <h3>{this.state.result}</h3>
-            <br />
-            <p>Game ID: {this.props.gameID}</p>
-            <br />
-          </Paper>
+        <div className="game openGame">
+        <span className="gameInfo">
+          <Blockies
+             seed={this.props.opponentAddress}
+             scale={5}
+             className="identicon"
+          />
+          <h3>#{this.props.gameID}</h3><span>Bet: {this.props.bet} WEI</span>
+        </span>
+          <span className="gameAction">{this.state.result}</span>
         </div>
       );
     }

@@ -1,7 +1,8 @@
-#Engima, Rock, Paper, Scissors
+# Engima, Rock, Paper, Scissors
 
 ## Install
 ### Download and deploy enigma-docker-network
+- Navigate to the directory you would like to install enigma-docker-network
 
 ```bash
 git clone https://github.com/enigmampc/enigma-docker-network.git
@@ -12,6 +13,7 @@ cd enigma-docker-network
 - Note, there are additional dependencies to install including docker and docker-compose. Please follow the guide at [enigma-docker-network](https://github.com/enigmampc/enigma-docker-network)
 
 ### Download and install Enigma, Rock, Paper, Scissors
+- Navigate to the directory you would like to install ERPS
 
 ```bash
 git clone https://github.com/PeterMPhillips/Enigma-Rock-Paper-Scissors.git

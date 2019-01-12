@@ -15,21 +15,24 @@ contract RockPaperScissors {
   }
 
   //mapping(bytes32 => uint8) public results;
-  mapping(bytes32 => Game) public games;
+  mapping(uint256 => Game) public games;
   mapping(address => int256) public earnings;
-  bytes32[] public openGames;
+  uint256[] public openGames;
+  uint256 gameCount;
 
   // Constructor called when new contract is deployed
   constructor(address _enigmaAddress) public {
     owner = msg.sender;
     enigma = _enigmaAddress;
+    gameCount = 0;
   }
 
   //Create new game, pass bet and encrypted move
   function newGame(bytes _move)
   payable
   external {
-    bytes32 gameID = keccak256(abi.encodePacked(msg.sender, msg.value, now));
+    uint256 gameID = gameCount;
+    gameCount += 1;
     games[gameID].player1 = msg.sender;
     games[gameID].player1Move = _move;
     games[gameID].bet = msg.value;
@@ -38,7 +41,7 @@ contract RockPaperScissors {
   }
 
   //Join an open game
-  function joinGame(bytes32 _gameID, bytes _move)
+  function joinGame(uint256 _gameID, bytes _move)
   payable
   external {
     require(games[_gameID].player2 == address(0));
@@ -47,11 +50,12 @@ contract RockPaperScissors {
     games[_gameID].player2Move = _move;
     games[_gameID].status = 1;
     earnings[msg.sender] -= int256(msg.value);
-    emit JoinGame(_gameID, msg.sender);
+    emit Participant(_gameID, games[_gameID].player1);
+    emit Participant(_gameID, msg.sender);
   }
 
   //Withdraw winnings
-  function withdraw(bytes32 _gameID)
+  function withdraw(uint256 _gameID)
   external{
     require(games[_gameID].status == 2);
     games[_gameID].status = 3;
@@ -61,20 +65,23 @@ contract RockPaperScissors {
       earnings[games[_gameID].player1] += int256(winnings);
       earnings[games[_gameID].player2] += int256(winnings);
       games[_gameID].player1.transfer(winnings);
+      emit Withdraw(_gameID, games[_gameID].player1, winnings);
       games[_gameID].player2.transfer(winnings);
+      emit Withdraw(_gameID, games[_gameID].player2, winnings);
     } else {
       require(games[_gameID].winner == msg.sender);
       winnings = games[_gameID].bet*2; //Return the bet amount from both users
       earnings[msg.sender] += int256(winnings);
       msg.sender.transfer(winnings);
+      emit Withdraw(_gameID, msg.sender, winnings);
     }
   }
 
   //Callable  function
-  function calculateWinner(bytes32 _gameID, address[] _players, string _move1, string _move2)
+  function calculateWinner(uint256 _gameID, address[] _players, string _move1, string _move2)
   public
   pure
-  returns(bytes32, address){
+  returns(uint256, address){
     require(_players.length == 2);
     address winner;
     bytes32 move1 = keccak256(abi.encode(_move1));
@@ -102,13 +109,13 @@ contract RockPaperScissors {
   }
 
   //Callback function
-  function setWinner(bytes32 _gameID, address _address) public onlyEnigma() {
+  function setWinner(uint256 _gameID, address _address) public onlyEnigma() {
     games[_gameID].status = 2;
     games[_gameID].winner = _address;
     emit Winner(_gameID, _address);
   }
 
-  function getGame(bytes32 _gameID)
+  function getGame(uint256 _gameID)
   external
   view
   returns(uint8, address, address, bytes, bytes, uint256){
@@ -120,14 +127,14 @@ contract RockPaperScissors {
             games[_gameID].bet);
   }
 
-  function getWinner(bytes32 _gameID)
+  function getWinner(uint256 _gameID)
   external
   view
   returns(address){
     return games[_gameID].winner;
   }
 
-  function getStatus(bytes32 _gameID)
+  function getStatus(uint256 _gameID)
   external
   view
   returns(uint8){
@@ -148,7 +155,8 @@ contract RockPaperScissors {
   }
 
   // Event emitted upon callback completion; watched from front end
-  event Winner(bytes32 indexed gameID, address indexed winner);
-  event NewGame(bytes32 indexed gameID, address indexed player1, uint256 indexed bet);
-  event JoinGame(bytes32 indexed gameID, address indexed player2);
+  event Winner(uint256 indexed gameID, address indexed winner);
+  event NewGame(uint256 indexed gameID, address indexed player1, uint256 indexed bet);
+  event Participant(uint256 indexed gameID, address indexed player);
+  event Withdraw(uint256 indexed gameID, address indexed player, uint256 indexed amount);
 }
