@@ -67,7 +67,6 @@ class NewGameDialog extends Component {
  // onClick listener to update to trigger newGame callback from parent component
  async handleNewGame(event) {
    event.preventDefault();
-   console.log(event);
    // Trigger RockPaperScissors newGame callback
    this.props.onNewGame(
      this.state.playerMove,
@@ -82,7 +81,7 @@ class NewGameDialog extends Component {
 
  render() {
    const { classes } = this.props;
-   if(this.state.playerAddress != ''){
+   if(this.state.playerAddress != null){
      return (
        <div style={{marginTop: -130}}>
          <Button

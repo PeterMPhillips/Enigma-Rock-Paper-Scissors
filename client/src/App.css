@@ -36,7 +36,7 @@
 }
 
 .gameInfo h3, .gameInfo span{
-  top:-6px;
+  top:-8px;
 }
 
 
@@ -47,6 +47,15 @@
 
 .identicon {
   border-radius:50%;
+}
+
+.identicon.selectAddress {
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.playerAddress {
+  vertical-align: middle;
 }
 
 .gameInfo .identicon {

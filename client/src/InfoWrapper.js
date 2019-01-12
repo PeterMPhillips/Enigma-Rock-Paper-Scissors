@@ -45,18 +45,24 @@ class InfoWrapper extends React.Component {
     super(props);
     this.changeNumOpenGames = this.changeNumOpenGames.bind(this);
     this.changeNumCompletedGames = this.changeNumCompletedGames.bind(this);
+    this.updateFunds = this.updateFunds.bind(this);
     this.state = {
       value: 0,
       numOpenGames: 0,
       numCompletedGames: 0,
-      playerAddress: '',
+      playerAddress: this.props.playerAddress,
     };
   }
 
   componentWillReceiveProps(nextProps) {
     if(this.state.playerAddress != nextProps.playerAddress){
       this.setState({playerAddress: nextProps.playerAddress});
-      this.getNumCompleteGames(nextProps.playerAddress);
+      if(this.state.value != 0){
+        this.getNumOpenGames(nextProps.playerAddress);
+      }
+      if(this.state.value != 1){
+        this.getNumCompleteGames(nextProps.playerAddress);
+      }
     }
   }
 
@@ -64,11 +70,20 @@ class InfoWrapper extends React.Component {
     this.setState({ value });
   };
 
+  async getNumOpenGames(address) {
+    let count = 0;
+    let e = await this.props.rps.NewGame({}, {fromBlock: 0, toBlock: 'latest'});
+    let logs = await Promisify(callback => e.get(callback));
+    for (var i=0; i<logs.length; i++){
+      if(logs[i].args.player1.toLowerCase() != address.toLowerCase()){ count++; }
+    }
+    await this.changeNumOpenGames(count);
+  }
+
   async getNumCompleteGames(address) {
     let e = await this.props.rps.Participant({player: address}, {fromBlock: 0, toBlock: 'latest'});
     let logs = await Promisify(callback => e.get(callback));
     await this.changeNumCompletedGames(logs.length);
-    this.render();
   }
 
   /*
@@ -76,6 +91,7 @@ class InfoWrapper extends React.Component {
   */
   async changeNumOpenGames(num) {
     this.setState({ numOpenGames: num });
+    this.props.onGameUpdate(this.props.playerAddress);
   }
 
   /*
@@ -83,6 +99,11 @@ class InfoWrapper extends React.Component {
   */
   async changeNumCompletedGames(num) {
     this.setState({ numCompletedGames: num });
+    this.props.onGameUpdate(this.props.playerAddress);
+  }
+
+  async updateFunds() {
+    this.props.onGameUpdate(this.props.playerAddress);
   }
 
   render() {
@@ -124,21 +145,24 @@ class InfoWrapper extends React.Component {
           </Tabs>
         </Paper>
         <br />
-        <Paper>
-          {this.state.value === 0 && <OpenGamesWrapper
-                            rps={this.props.rps}
-                            enigmaSetup={this.props.enigmaSetup}
-                            playerAddress={this.props.playerAddress}
-                            onUpdateOpenGames={this.changeNumOpenGames}
-                          />}
-          {this.state.value === 1 && <CompletedGamesWrapper
-                            rps={this.props.rps}
-                            enigmaSetup={this.props.enigmaSetup}
-                            playerAddress={this.props.playerAddress}
-                            onUpdateCompletedGames={this.changeNumCompletedGames}
-                          />}
-          {this.state.value === 2 && ''}
-        </Paper>
+        {this.state.value === 0 && <OpenGamesWrapper
+                          rps={this.props.rps}
+                          enigmaSetup={this.props.enigmaSetup}
+                          playerAddress={this.props.playerAddress}
+                          numOpenGames={this.state.numOpenGames}
+                          numCompletedGames={this.state.numCompletedGames}
+                          onUpdateOpenGames={this.changeNumOpenGames}
+                          onUpdateCompletedGames={this.changeNumCompletedGames}
+                        />}
+        {this.state.value === 1 && <CompletedGamesWrapper
+                          rps={this.props.rps}
+                          enigmaSetup={this.props.enigmaSetup}
+                          playerAddress={this.props.playerAddress}
+                          numCompletedgames={this.state.numCompletedGames}
+                          onUpdateCompletedGames={this.changeNumCompletedGames}
+                          onUpdateFunds={this.updateFunds}
+                        />}
+        {this.state.value === 2 && ''}
         <br />
       </Container>
     );

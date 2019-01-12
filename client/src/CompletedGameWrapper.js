@@ -19,21 +19,19 @@ class CompletedGameWrapper extends Component {
     super(props);
     this.state = {
       status: null,
-      amount: 0
+      amount: '0 WEI'
     };
     this.withdraw = this.withdraw.bind(this);
   }
 
   componentDidMount = async () => {
     let status, amount;
-    console.log('Bet: ', this.props.bet);
     if(this.props.bet > 0 && (this.props.result == 'Won' || this.props.result == 'Draw')){
       if(this.props.result == 'Won'){
         amount = this.props.bet * 2;
       } else {
         amount = this.props.bet;
       }
-      console.log('Status: ', this.props.status);
       if(this.props.status == 2){
         status = "Funds available";
       } else {
@@ -43,6 +41,7 @@ class CompletedGameWrapper extends Component {
       status = "No funds to withdraw";
       amount = 0;
     }
+    amount = await this.processWEI(amount.toString());
     this.setState({
       status: status,
       amount: amount
@@ -53,7 +52,6 @@ class CompletedGameWrapper extends Component {
   Callback for withdrawing from a game.
   */
   async withdraw() {
-    console.log('Address: ', this.props.playerAddress);
     this.setState({ status: "Withdrawing funds..." });
     this.render();
     await this.props.rps.withdraw(
@@ -61,8 +59,20 @@ class CompletedGameWrapper extends Component {
       { from: this.props.playerAddress, gas: GAS }
     );
     this.setState({ status: "Funds withdrawn" });
+    this.props.onWithdrawn();
     this.render();
   }
+
+  async processWEI(wei){
+		let string;
+		if(wei.length > 14){
+			string = await this.props.enigmaSetup.web3.utils.fromWei(wei, 'ether');
+			string = string + ' ETH';
+		} else {
+			string = wei + ' WEI';
+		}
+		return string;
+	}
 
   render() {
     if(this.state.status == "Funds available"){
@@ -79,7 +89,7 @@ class CompletedGameWrapper extends Component {
                scale={5}
                className="identicon"
             />
-            <h3>#{this.props.gameID} - {this.props.result}</h3><span>Total: {this.state.amount} WEI</span>
+            <h3>#{this.props.gameID} - {this.props.result}</h3><span>Total: {this.state.amount}</span>
           </span>
           <div className="gameAction">
             <span className="status">{this.state.status}</span>
@@ -107,7 +117,7 @@ class CompletedGameWrapper extends Component {
                scale={5}
                className="identicon"
             />
-            <h3>#{this.props.gameID} - {this.props.result}</h3><span>Total: {this.state.amount} WEI</span>
+            <h3>#{this.props.gameID} - {this.props.result}</h3><span>Total: {this.state.amount}</span>
           </span>
           <div className="gameAction">
             <span className="status">{this.state.status}</span>

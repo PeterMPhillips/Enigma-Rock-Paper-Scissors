@@ -107,7 +107,12 @@ class ChangeAddressDialog extends Component {
                  {this.props.accounts.map((account, i) => {
                    return (
                      <MenuItem key={i} value={account.toLowerCase()}>
-                       {account}
+                       <Blockies
+                          seed={account.toLowerCase()}
+                          scale={5}
+                          className="identicon selectAddress"
+                       />
+                       <span className="playerAddress">{account}</span>
                      </MenuItem>
                    );
                  })}

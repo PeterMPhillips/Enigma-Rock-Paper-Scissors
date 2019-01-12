@@ -1,7 +1,7 @@
 import React, { Component } from "react";
-import PropTypes from "prop-types";
-import { withStyles } from "@material-ui/core/styles";
 import CompletedGameWrapper from "./CompletedGameWrapper";
+import Paper from '@material-ui/core/Paper';
+import CircularProgress from '@material-ui/core/CircularProgress';
 const Promisify = (inner) =>
     new Promise((resolve, reject) =>
         inner((err, res) => {
@@ -17,16 +17,16 @@ class CompletedGamesWrapper extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      completedGames: [],
-      numCompletedGames: 0,
-      completedGamesDiv: [],
+      numCompletedGames: this.props.numCompletedGames,
+      completedGamesDiv: <CircularProgress color="secondary"/>,
       playerAddress: this.props.playerAddress
     };
     this.getCompletedGames = this.getCompletedGames.bind(this);
+    this.withdrawn = this.withdrawn.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
-    if(this.state.playerAddress != nextProps.playerAddress){
+    if(this.state.playerAddress !== nextProps.playerAddress){
       this.setState({
         playerAddress: nextProps.playerAddress
       });
@@ -35,26 +35,25 @@ class CompletedGamesWrapper extends Component {
   }
 
   componentDidMount = async () => {
-    console.log('Mounted');
     this.getCompletedGames(this.state.playerAddress);
   };
 
+  async withdrawn(){
+    this.props.onUpdateFunds();
+  }
+
   async getCompletedGames(address) {
-    let completedGames = [];
     let completedGamesDiv = [];
     let e = await this.props.rps.Winner({}, {fromBlock: 0, toBlock: 'latest'});
     let logs = await Promisify(callback => e.get(callback));
     for(var i=0; i<logs.length; i++){
       let [ status, player1, player2, player1Move, player2Move, bet] = await this.props.rps.getGame(logs[i].args.gameID);
-      console.log('Bet: ', bet);
-      if(status.toNumber() >= 1 && (player1.toLowerCase() == address.toLowerCase() || player2.toLowerCase() == address.toLowerCase())){
-        completedGames.push(logs[i].args);
+      if(status.toNumber() >= 1 && (player1.toLowerCase() === address.toLowerCase() || player2.toLowerCase() === address.toLowerCase())){
         let winner = logs[i].args.winner;
-        console.log(winner);
         let result;
-        if(winner.toLowerCase() == address.toLowerCase()){
+        if(winner.toLowerCase() === address.toLowerCase()){
           result = 'Won';
-        } else if(winner.toLowerCase() == '0x0000000000000000000000000000000000000000') {
+        } else if(winner.toLowerCase() === '0x0000000000000000000000000000000000000000') {
           result = 'Draw';
         } else {
           result = 'Lost';
@@ -70,26 +69,25 @@ class CompletedGamesWrapper extends Component {
                             status={status.toNumber()}
                             rps={this.props.rps}
                             enigmaSetup={this.props.enigmaSetup}
+                            onWithdrawn={this.withdrawn}
                           />);
       }
     }
     completedGamesDiv.reverse();
+    let num = completedGamesDiv.length;
+    completedGamesDiv = <Paper>{completedGamesDiv}</Paper>;
     this.setState({
-      completedGames: completedGames,
-      numCompletedGames: completedGames.length,
+      numCompletedGames: num,
       completedGamesDiv: completedGamesDiv
     });
+
     // Trigger RockPaperScissors changeAddress callback
-    this.props.onUpdateCompletedGames(
-      this.state.completedGames.length
-    );
+    this.props.onUpdateCompletedGames(num);
   }
 
   render() {
     return (
-      <div>
-        {this.state.completedGamesDiv}
-      </div>
+      this.state.completedGamesDiv
     );
   }
 }

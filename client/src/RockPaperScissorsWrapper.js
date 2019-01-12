@@ -34,11 +34,13 @@ class RockPaperScissorsWrapper extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      playerAddress: '',
-      totalEarnings: 0,
+      playerAddress: '0x0000000000000000000000000000000000000000',
+      earnings: 0,
+      balance: 0,
       open: false
     };
     this.changeAddress = this.changeAddress.bind(this);
+    this.setFunds = this.setFunds.bind(this);
     this.newGame = this.newGame.bind(this);
   }
 
@@ -52,8 +54,22 @@ class RockPaperScissorsWrapper extends Component {
       playerAddress: address,
       totalEarnings: earnings.toNumber(),
     });
+    this.setFunds(address);
     this.render();
   }
+
+  //Callback to update earnings and balance
+  async setFunds(address) {
+    if(address != '0x0000000000000000000000000000000000000000'){
+      let balance = await this.props.enigmaSetup.web3.eth.getBalance(address);
+  		let earnings = await this.props.rps.getEarnings(address);
+      earnings = earnings.toString();
+  		this.setState({
+  			balance: balance,
+        earnings: earnings
+      });
+    }
+	}
 
   /*
   Callback for starting a new game. Note that we are encrypting move data
@@ -65,6 +81,7 @@ class RockPaperScissorsWrapper extends Component {
       encryptedMove,
       { from: this.state.playerAddress, value: bet, gas: GAS }
     );
+    this.setFunds(this.state.playerAddress)
     this.setState({ open: true });
   }
 
@@ -81,7 +98,10 @@ class RockPaperScissorsWrapper extends Component {
       return (
         <div>
           <Header
+            rps={this.props.rps}
             enigmaSetup={this.props.enigmaSetup}
+            earnings={this.state.earnings}
+            balance={this.state.balance}
             onChangeAddress={this.changeAddress}
           />
           <Splash />
@@ -96,6 +116,7 @@ class RockPaperScissorsWrapper extends Component {
             enigmaSetup={this.props.enigmaSetup}
             playerAddress={this.state.playerAddress}
             newGame={this.state.newGame}
+            onGameUpdate={this.setFunds}
           />
           <Snackbar
             className={classes.snackbar}

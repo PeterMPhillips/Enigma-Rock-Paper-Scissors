@@ -25,7 +25,8 @@ class JoinGameWrapper extends Component {
     super(props);
     this.state = {
       result: null,
-      playerAddress: this.props.playerAddress
+      playerAddress: this.props.playerAddress,
+      amount: '0 WEI'
     };
     this.joinGame = this.joinGame.bind(this);
     this.enigmaTask = this.enigmaTask.bind(this);
@@ -41,7 +42,22 @@ class JoinGameWrapper extends Component {
   }
 
   componentDidMount = async () => {
+    if(this.props.bet !== undefined){
+      let amount = await this.processWEI(this.props.bet.toString());
+      this.setState({amount: amount});
+    }
   };
+
+  async processWEI(wei){
+		let string;
+		if(wei.length > 14){
+			string = await this.props.enigmaSetup.web3.utils.fromWei(wei, 'ether');
+			string = string + ' ETH';
+		} else {
+			string = wei + ' WEI';
+		}
+		return string;
+	}
 
 
   /*
@@ -49,7 +65,6 @@ class JoinGameWrapper extends Component {
   in this function and pass in those values to the contract
   */
   async joinGame(move) {
-    console.log(this.props);
     let encryptedMove = getEncryptedValue(move);
     await this.props.rps.joinGame(
       this.props.gameID,
@@ -59,13 +74,12 @@ class JoinGameWrapper extends Component {
     let status = "Calculating winner...";
     this.setState({ result: status });
     this.render();
+    await this.props.onGameJoined();
     // Run the enigma task secure computation above
     await this.enigmaTask(this.props.gameID);
     // Watch for event and update state once callback is completed/event emitted
     const callbackFinishedEvent = this.props.rps.Winner({gameID: this.props.gameID});
     callbackFinishedEvent.watch(async (error, result) => {
-      console.log(result);
-
       let winner = result.args.winner.toLowerCase();
       //let winner = await this.props.rps.getWinner.call(this.props.gameID);
 
@@ -116,7 +130,7 @@ class JoinGameWrapper extends Component {
       console.log("mined on block:", result.receipt.blockNumber);
     }
   }
-  
+
   render() {
     if(this.state.result == null){
       return (
@@ -127,7 +141,7 @@ class JoinGameWrapper extends Component {
                scale={5}
                className="identicon"
             />
-            <h3>#{this.props.gameID}</h3><span>Bet: {this.props.bet} WEI</span>
+            <h3>#{this.props.gameID}</h3><span>Bet: {this.state.amount}</span>
           </span>
           <JoinGameDialog
             onJoinGame={this.joinGame}
@@ -144,7 +158,7 @@ class JoinGameWrapper extends Component {
              scale={5}
              className="identicon"
           />
-          <h3>#{this.props.gameID}</h3><span>Bet: {this.props.bet} WEI</span>
+          <h3>#{this.props.gameID}</h3><span>Bet: {this.state.amount}</span>
         </span>
           <span className="gameAction">{this.state.result}</span>
         </div>
